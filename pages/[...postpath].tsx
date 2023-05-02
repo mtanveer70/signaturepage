@@ -7,7 +7,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const endpoint = process.env.GRAPHQL_ENDPOINT as string;
 	const graphQLClient = new GraphQLClient(endpoint);
 	const referringURL = ctx.req.headers?.referer || null;
-	const pathArr = ctx.query.pagepath as Array<string>;
+	const pathArr = ctx.query.postpath as Array<string>;
 	const path = pathArr.join('/');
 	console.log(path);
 	const fbclid = ctx.query.fbclid;
@@ -25,7 +25,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	}
 	const query = gql`
 		{
-			page(id: "/${path}/", idType: URI) {
+			post(id: "/${path}/", idType: URI) {
 				id
 				excerpt
 				title
@@ -49,7 +49,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	`;
 
 	const data = await graphQLClient.request(query);
-	if (!data.page) {
+	if (!data.post) {
 		return {
 			notFound: true,
 		};
@@ -57,20 +57,20 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	return {
 		props: {
 			path,
-			page: data.page,
+			post: data.post,
 			host: ctx.req.headers.host,
 		},
 	};
 };
 
-interface pageProps {
-	page: any;
+interface postProps {
+	post: any;
 	host: string;
 	path: string;
 }
 
-const page: React.FC<pageProps> = (props) => {
-	const { page, host, path } = props;
+const post: React.FC<postProps> = (props) => {
+	const { post, host, path } = props;
 
 	// to remove tags from excerpt
 	const removeTags = (str: string) => {
@@ -82,32 +82,32 @@ const page: React.FC<pageProps> = (props) => {
 	return (
 		<>
 			<Head>
-				<meta property="og:title" content={page.title} />
+				<meta property="og:title" content={post.title} />
 				<link rel="canonical" href={`https://${host}/${path}`} />
-				<meta property="og:description" content={removeTags(page.excerpt)} />
+				<meta property="og:description" content={removeTags(post.excerpt)} />
 				<meta property="og:url" content={`https://${host}/${path}`} />
 				<meta property="og:type" content="article" />
 				<meta property="og:locale" content="en_US" />
 				<meta property="og:site_name" content={host.split('.')[0]} />
-				<meta property="article:published_time" content={page.dateGmt} />
-				<meta property="article:modified_time" content={page.modifiedGmt} />
-				<meta property="og:image" content={page.featuredImage.node.sourceUrl} />
+				<meta property="article:published_time" content={post.dateGmt} />
+				<meta property="article:modified_time" content={post.modifiedGmt} />
+				<meta property="og:image" content={post.featuredImage.node.sourceUrl} />
 				<meta
 					property="og:image:alt"
-					content={page.featuredImage.node.altText || page.title}
+					content={post.featuredImage.node.altText || post.title}
 				/>
-				<title>{page.title}</title>
+				<title>{post.title}</title>
 			</Head>
-			<div className="page-container">
-				<h1>{page.title}</h1>
+			<div className="post-container">
+				<h1>{post.title}</h1>
 				<img
-					src={page.featuredImage.node.sourceUrl}
-					alt={page.featuredImage.node.altText || page.title}
+					src={post.featuredImage.node.sourceUrl}
+					alt={post.featuredImage.node.altText || post.title}
 				/>
-				<article dangerouslySetInnerHTML={{ __html: page.content }} />
+				<article dangerouslySetInnerHTML={{ __html: post.content }} />
 			</div>
 		</>
 	);
 };
 
-export default page;
+export default post;
